@@ -1,28 +1,118 @@
-import { StrictMode } from 'react'
+import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import RegistrarTareas from './components/registrarTareas/RegistrarTareas'
+import NotasRapidas from './components/notasRapidas/NotasRapidas'
+import Checklist from './components/checklist/Checklist'
+import Pomodoro from './components/pomodoro/Pomodoro'
 
-createRoot(document.getElementById('root')).render(
-  <>
-    <div className='flex gap-3 p-3 bg-stone-100 h-screen w-screen'>
-      <div id='menu-lateral' className='flex flex-col gap-0 rounded-lg bg-blue-800 h-full w-1/5'>
-        <div className='flex justify-center items-center gap-2 font-extrabold text-white rounded-md m-2 pt-10 pb-10'>
-          <div className='w-10 h-10 bg-white rounded-xl'>   
+const App = () => {
+  const [activeTab, setActiveTab] = useState('tareas')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // Efecto para detectar cambios en el tamaño de la pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (!mobile) setIsMenuOpen(false)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const components = {
+    tareas: <RegistrarTareas />,
+    pomodoro: <Pomodoro />,
+    notas: <NotasRapidas />,
+    checklist: <Checklist />
+  }
+
+  const tabs = [
+    { id: 'tareas', icon: '📝', label: 'Tareas' },
+    { id: 'checklist', icon: '✅', label: 'Checklist' },
+    { id: 'pomodoro', icon: '⏱️', label: 'Pomodoro' },
+    { id: 'notas', icon: '📋', label: 'Notas' }
+  ]
+
+  return (
+    <div className="app-container">
+      {/* Header superior para móvil */}
+      <header className="mobile-header">
+        <button a
+          className="menu-button"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Menú"
+        >
+          <span className={`menu-icon ${isMenuOpen ? 'open' : ''}`}></span>
+        </button>
+        <h1 className="app-title">SmarToDo</h1>
+        <div className="user-avatar">
+          <span>TE</span>
+        </div>
+      </header>
+
+      {/* Menú lateral */}
+      <aside className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
+        <nav className="nav-menu">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab(tab.id)
+                setIsMenuOpen(false)
+              }}
+            >
+              <span className="nav-icon">{tab.icon}</span>
+              <span className="nav-label">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="user-info">
+          <div className="user-avatar large">
+            <span>TE</span>
           </div>
-          <div className='text-2xl'>
-            SmarToDo
+          <div className="user-details">
+            <h3>Thomas Espitia</h3>
+            <p>El mejor 💖</p>
           </div>
         </div>
-        <div className='hover:bg-stone-50 hover:text-blue-800 text-white rounded-md ml-2 mr-2 p-3'>✅ Registrar tareas</div>
-        <div className='hover:bg-stone-50 hover:text-blue-800 text-white rounded-md ml-2 mr-2 p-3'>📒 Notas rapidas</div>
-        <div className='hover:bg-stone-50 hover:text-blue-800 text-white rounded-md ml-2 mr-2 p-3'>🔔 Recordatorios</div>
-        <div className='hover:bg-stone-50 hover:text-blue-800 text-white rounded-md ml-2 mr-2 p-3'>🕒 Horarios </div>
-        <div className='hover:bg-stone-50 hover:text-blue-800 text-white rounded-md ml-2 mr-2 p-3'>📅 Calendario</div>
-      </div>
-    <div className='flex p-4 gap-2 rounded-lg bg-stone-50 h-full w-full'>
-      <RegistrarTareas className='overflow-hidden' ></RegistrarTareas>
+      </aside>
+
+      {/* Overlay para móvil */}
+      {isMenuOpen && isMobile && (
+        <div 
+          className="menu-overlay"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      {/* Contenido principal */}
+      <main className="main-content">
+        {components[activeTab] || <div>Selecciona una opción</div>}
+      </main>
+
+      {/* Barra inferior para móvil */}
+      {isMobile && (
+        <footer className="mobile-footer">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`footer-tab ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="tab-icon">{tab.icon}</span>
+              <span className="tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </footer>
+      )}
     </div>
-    </div>
-  </>
-)
+  )
+}
+
+createRoot(document.getElementById('root')).render(<App />)
